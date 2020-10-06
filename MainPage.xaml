@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TireTorture.MainPage">
+
+    <StackLayout>
+        <Label Text="Starting Location" x:Name="StartingLocation"/>
+        <Label Text="Final Location" x:Name="FinalLocation"/>
+        <Label Text="Elapsed Distance" x:Name="ElapsedDistance"/>
+        <Button Text="Start Measuring Distance" x:Name="DistanceButton" Clicked="DistanceButton_Clicked" />
+        <Label Text="Euler Angle Output" x:Name="EulerOutput" />
+        <Button Text="Start Angled Walk" x:Name="AngledWalkButton" Clicked="AngledWalkButton_Clicked" />
+    </StackLayout>
+
+</ContentPage>
