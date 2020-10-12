@@ -4,12 +4,14 @@
              x:Class="TireTorture.MainPage">
 
     <StackLayout>
-        <Label Text="Starting Location" x:Name="StartingLocation"/>
-        <Label Text="Final Location" x:Name="FinalLocation"/>
-        <Label Text="Elapsed Distance" x:Name="ElapsedDistance"/>
-        <Button Text="Start Measuring Distance" x:Name="DistanceButton" Clicked="DistanceButton_Clicked" />
-        <Label Text="Euler Angle Output" x:Name="EulerOutput" />
-        <Button Text="Start Angled Walk" x:Name="AngledWalkButton" Clicked="AngledWalkButton_Clicked" />
+        <Label Text="Starting Location" x:Name="StartingLocation" Style="{StaticResource LabelStyle}"/>
+        <Label Text="Final Location" x:Name="FinalLocation" Style="{StaticResource LabelStyle}"/>
+        <Label Text="Elapsed Distance" x:Name="ElapsedDistance" Style="{StaticResource LabelStyle}"/>
+        <Label Text="Rotations" x:Name="ElapsedRotations" Style="{StaticResource LabelStyle}"/>
+        <Button Text="Start Measuring Distance" x:Name="DistanceButton" Clicked="DistanceButton_Clicked" Style="{StaticResource ButtonStyle}" />
+        <Button Text="Start Measuring Rotations" x:Name="RotationButton" Clicked="RotationButton_Clicked" Style="{StaticResource ButtonStyle}" />
+        <Button Text="Start Angled Walk" x:Name="AngledWalkButton" Clicked="AngledWalkButton_Clicked" Style="{StaticResource ButtonStyle}" />
+        <Label Text="Euler Angle Output" x:Name="EulerOutput" Style="{StaticResource LabelStyle}" />
     </StackLayout>
 
 </ContentPage>

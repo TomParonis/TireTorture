@@ -20,7 +20,7 @@ namespace TireTorture
             bMeasuringDistance = false;
         }
 
-        private async void DistanceButton_Clicked(object sender, EventArgs e)
+        private async void StartMeasuring(bool bRotation)
         {
             if (bMeasuringDistance == false)
             {
@@ -28,7 +28,10 @@ namespace TireTorture
                 StartingLocation.Text = "";
                 FinalLocation.Text = "";
                 ElapsedDistance.Text = "";
-                DistanceButton.Text = "Stop Measuring Distance";
+                if (bRotation == false)
+                    DistanceButton.Text = "Stop Measuring Distance";
+                else
+                    RotationButton.Text = "Stop Measuring Rotations";
                 try
                 {
                     var request = new GeolocationRequest(GeolocationAccuracy.Best);
@@ -50,12 +53,18 @@ namespace TireTorture
                 {
                     StartingLocation.Text = "Exception!";
                 }
-                StartingLocation.Text = "Latitude: " + startingPoint.Latitude.ToString() + "  Longitude: " + startingPoint.Longitude.ToString();
+                if (startingPoint != null)
+                    StartingLocation.Text = "Latitude: " + startingPoint.Latitude.ToString() + "  Longitude: " + startingPoint.Longitude.ToString();
+                else
+                    ElapsedDistance.Text = "Couldn't get Starting Point";
             }
             else
             {
                 bMeasuringDistance = false;
-                DistanceButton.Text = "Start Measuring Distance";
+                if (bRotation == false)
+                    DistanceButton.Text = "Start Measuring Distance";
+                else
+                    RotationButton.Text = "Start Measuring Rotations";
                 try
                 {
                     var request = new GeolocationRequest(GeolocationAccuracy.Best);
@@ -81,7 +90,24 @@ namespace TireTorture
                 double nDistanceCovered = Location.CalculateDistance(startingPoint, endingPoint, DistanceUnits.Kilometers);
                 nDistanceCovered = nDistanceCovered * 1000;
                 ElapsedDistance.Text = String.Format("{0:0.00}", nDistanceCovered) + " meters have been covered!";
+                if ( bRotation == true )
+                {
+                    double nRotations = nDistanceCovered / 10;
+                    ElapsedRotations.Text = String.Format("{0:0.00}", nRotations) + " rotations have occured!";
+                }
+                
+                
             }
+        }
+
+        private void DistanceButton_Clicked(object sender, EventArgs e)
+        {
+            StartMeasuring(false);
+        }
+
+        private void RotationButton_Clicked(object sender, EventArgs e)
+        {
+            StartMeasuring(true);
         }
 
         void ToEulerAngles(double W, double X, double Y, double Z)
