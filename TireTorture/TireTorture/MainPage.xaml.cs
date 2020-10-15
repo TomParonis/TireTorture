@@ -13,11 +13,12 @@ namespace TireTorture
         //0 = roll, 1 = pitch, 2 = yaw 
         double[] eulerAngles = new double[3];
 
-        bool bMeasuringDistance;
+        bool bMeasuringDistance, bAngledWalk;
         public MainPage()
         {
             InitializeComponent();
             bMeasuringDistance = false;
+            bAngledWalk = false;
         }
 
         private async void StartMeasuring(bool bRotation)
@@ -145,46 +146,80 @@ namespace TireTorture
         {
             var data = e.Reading;
             ToEulerAngles(data.Orientation.W, data.Orientation.X, data.Orientation.Y, data.Orientation.Z);
-            EulerOutput.Text = eulerAngles[0].ToString("#.##") + "," + eulerAngles[1].ToString("#.##") + "," + eulerAngles[2].ToString("#.##");
+            //EulerOutput.Text = eulerAngles[0].ToString("#.##") + "," + eulerAngles[1].ToString("#.##") + "," + eulerAngles[2].ToString("#.##");
         }
 
-        public void OrientationSensorTest()
-        {
-            // Register for reading changes, be sure to unsubscribe when finished
-            OrientationSensor.ReadingChanged += OrientationSensor_ReadingChanged;
+        public void OrientationSensorStart(bool bAngledWalk)
+        {// Register for reading changes, be sure to unsubscribe when finished
+            if ( bAngledWalk == true )
+                OrientationSensor.ReadingChanged += OrientationSensor_ReadingChanged;
+            else
+                OrientationSensor.ReadingChanged -= OrientationSensor_ReadingChanged;
         }
 
-
-        private async void AngledWalkButton_Clicked(object sender, EventArgs e)
+        bool CheckOrientation()
         {
-            try
+            if (eulerAngles[0] >= -.7 && eulerAngles[0] <= -.25)
+                return true;
+            else
+                return false;
+        }
+
+        public async void StartMeasuringAngledWalk(bool bAngledWalk)
+        {
+            if (bAngledWalk == true)
             {
-                var startRequest = new GeolocationRequest(GeolocationAccuracy.Best);
-                startingPoint = await Geolocation.GetLocationAsync(startRequest);
-                OrientationSensorTest();
-                OrientationSensor.Start(speed);
-                while (OrientationSensor.IsMonitoring)
+                try
                 {
-                    var endRequest = new GeolocationRequest(GeolocationAccuracy.Best);
-                    endingPoint = await Geolocation.GetLocationAsync(endRequest);
-                    //double meters = Location.CalculateDistance(startingPoint, endingPoint, DistanceUnits.Kilometers);
-                    //meters = meters * 1000;
-                    //distanceElapsed.Text = String.Format("{0:0.00}", meters) + " meters have been covered!";
+                    var startRequest = new GeolocationRequest(GeolocationAccuracy.Best);
+                    startingPoint = await Geolocation.GetLocationAsync(startRequest);
+                    OrientationSensorStart(bAngledWalk);
+                    OrientationSensor.Start(speed);
+                    while (OrientationSensor.IsMonitoring && CheckOrientation() == true)
+                    {
+                        EulerOutput.Text = eulerAngles[0].ToString("#.##") + "," + eulerAngles[1].ToString("#.##") + "," + eulerAngles[2].ToString("#.##");
+                    }
+                    bAngledWalk = false;
+                    OrientationSensorStart(bAngledWalk);
+                    StartMeasuringAngledWalk(bAngledWalk);
+                }
+                catch (FeatureNotSupportedException fnsEx)
+                {
+                    if (fnsEx != null)
+                        EulerOutput.Text = fnsEx.Message;
+                    else
+                        EulerOutput.Text = "This feature is not supported by your device!";
+                }
+                catch (Exception ex)
+                {
+                    if (ex != null)
+                        EulerOutput.Text = ex.Message;
+                    else
+                        EulerOutput.Text = "Unknown Exception";
                 }
             }
-            catch (FeatureNotSupportedException fnsEx)
+            else
             {
-                if (fnsEx != null)
-                    EulerOutput.Text = fnsEx.Message;
-                else
-                    EulerOutput.Text = "This feature is not supported by your device!";
+                var endRequest = new GeolocationRequest(GeolocationAccuracy.Best);
+                endingPoint = await Geolocation.GetLocationAsync(endRequest);
+                double meters = Location.CalculateDistance(startingPoint, endingPoint, DistanceUnits.Kilometers);
+                meters = meters * 1000;
+                ElapsedDistance.Text = String.Format("{0:0.00}", meters) + " meters have been covered!";
             }
-            catch (Exception ex)
+        }
+    
+        public void AngledWalkButton_Clicked(object sender, EventArgs e)
+        {
+            if ( bAngledWalk == false )
             {
-                if (ex != null)
-                    EulerOutput.Text = ex.Message;
-                else
-                    EulerOutput.Text = "Unknown Exception";
+                bAngledWalk = true;
+                EulerOutput.Text = "";
+                StartMeasuringAngledWalk(bAngledWalk);
+            }
+            else
+            {
+                bAngledWalk = false;
+                StartMeasuringAngledWalk(bAngledWalk);
             }
         }
     }
