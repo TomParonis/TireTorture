@@ -11,7 +11,10 @@
         <Button Text="Start Measuring Distance" x:Name="DistanceButton" Clicked="DistanceButton_Clicked" Style="{StaticResource ButtonStyle}" />
         <Button Text="Start Measuring Rotations" x:Name="RotationButton" Clicked="RotationButton_Clicked" Style="{StaticResource ButtonStyle}" />
         <Button Text="Start Angled Walk" x:Name="AngledWalkButton" Clicked="AngledWalkButton_Clicked" Style="{StaticResource ButtonStyle}" />
-        <Label Text="Euler Angle Output" x:Name="EulerOutput" Style="{StaticResource LabelStyle}" />
+        <Label Text="Euler Angle Output:" x:Name="EulerOutput" Style="{StaticResource LabelStyle}" />
+        <Label Text="EulerAngles[0]" x:Name="EulerAngles0" HorizontalOptions="Center"  Style="{StaticResource LabelStyle}" />
+        <Label Text="EulerAngles[1]" x:Name="EulerAngles1" HorizontalOptions="Center"  Style="{StaticResource LabelStyle}" />
+        <Label Text="EulerAngles[2]" x:Name="EulerAngles2" HorizontalOptions="Center"  Style="{StaticResource LabelStyle}" />
     </StackLayout>
 
 </ContentPage>

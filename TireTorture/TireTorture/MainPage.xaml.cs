@@ -13,102 +13,136 @@ namespace TireTorture
         //0 = roll, 1 = pitch, 2 = yaw 
         double[] eulerAngles = new double[3];
 
-        bool bMeasuringDistance, bAngledWalk;
+        bool bMeasuringDistance, bAngledWalk, bRotation;
         public MainPage()
         {
             InitializeComponent();
             bMeasuringDistance = false;
             bAngledWalk = false;
+            bRotation = false;
+            try
+            {
+                OrientationSensorStart(true);
+                OrientationSensor.Start(speed);
+            }
+            catch (FeatureNotSupportedException)
+            {
+                StartingLocation.Text = "The Orientation sensor is not supported on this device!";
+            }
+            catch (FeatureNotEnabledException)
+            {
+                StartingLocation.Text = "The Orientation sensor is not enabled on this device!";
+            }
+            catch (PermissionException)
+            {//ex is null
+                StartingLocation.Text = "Permission Exception";
+            }
+            catch (Exception)
+            {
+                StartingLocation.Text = "Unknown Startup Exception!";
+            }
         }
 
-        private async void StartMeasuring(bool bRotation)
+        private async void StartOrientation()
         {
-            if (bMeasuringDistance == false)
+            try
             {
+                var request = new GeolocationRequest(GeolocationAccuracy.Best);
+                startingPoint = await Geolocation.GetLocationAsync(request);
+            }
+            catch (FeatureNotSupportedException ex)
+            {
+                StartingLocation.Text = "This feature is not supported on this device!";
+            }
+            catch (FeatureNotEnabledException ex)
+            {
+                StartingLocation.Text = "This feature is not enabled on this device!";
+            }
+            catch (PermissionException ex)
+            {//ex is null
+                StartingLocation.Text = "Permission Exception";
+            }
+            catch (Exception ex)
+            {
+                StartingLocation.Text = "Exception!";
+            }
+            if (startingPoint != null)
+                StartingLocation.Text = "Latitude: " + startingPoint.Latitude.ToString() + "  Longitude: " + startingPoint.Longitude.ToString();
+            else
+                ElapsedDistance.Text = "Couldn't get Starting Point";
+        }
+
+        private async void StopOrientation()
+        {
+            try
+            {
+                var request = new GeolocationRequest(GeolocationAccuracy.Best);
+                endingPoint = await Geolocation.GetLocationAsync(request);
+            }
+            catch (FeatureNotSupportedException)
+            {
+                FinalLocation.Text = "This feature is not supported on this device!";
+            }
+            catch (FeatureNotEnabledException)
+            {
+                FinalLocation.Text = "This feature is not enabled on this device!";
+            }
+            catch (PermissionException)
+            {
+                FinalLocation.Text = "This feature is not permitted on this device!";
+            }
+            catch (Exception)
+            {
+                FinalLocation.Text = "Exception!";
+            }
+            FinalLocation.Text = "Latitude: " + endingPoint.Latitude.ToString() + "  Longitude: " + endingPoint.Longitude.ToString();
+            double nDistanceCovered = Location.CalculateDistance(startingPoint, endingPoint, DistanceUnits.Kilometers);
+            nDistanceCovered = nDistanceCovered * 1000;
+            ElapsedDistance.Text = String.Format("{0:0.00}", nDistanceCovered) + " meters have been covered!";
+            if (bRotation == true)
+            {
+                double nRotations = nDistanceCovered / 10;
+                ElapsedRotations.Text = String.Format("{0:0.00}", nRotations) + " rotations have occured!";
+            }
+        }
+
+        
+        private void DistanceButton_Clicked(object sender, EventArgs e)
+        {
+            if (bMeasuringDistance == true)
+            {
+                StopOrientation();
+                DistanceButton.Text = "Start Measuring Distance";
+                bMeasuringDistance = false;
+            }
+            else
+            {
+                DistanceButton.Text = "Stop Measuring Distance";
                 bMeasuringDistance = true;
                 StartingLocation.Text = "";
                 FinalLocation.Text = "";
                 ElapsedDistance.Text = "";
-                if (bRotation == false)
-                    DistanceButton.Text = "Stop Measuring Distance";
-                else
-                    RotationButton.Text = "Stop Measuring Rotations";
-                try
-                {
-                    var request = new GeolocationRequest(GeolocationAccuracy.Best);
-                    startingPoint = await Geolocation.GetLocationAsync(request);
-                }
-                catch (FeatureNotSupportedException ex)
-                {
-                    StartingLocation.Text = "This feature is not supported on this device!";
-                }
-                catch (FeatureNotEnabledException ex)
-                {
-                    StartingLocation.Text = "This feature is not enabled on this device!";
-                }
-                catch (PermissionException ex)
-                {//ex is null
-                    StartingLocation.Text = "Permission Exception";
-                }
-                catch (Exception ex)
-                {
-                    StartingLocation.Text = "Exception!";
-                }
-                if (startingPoint != null)
-                    StartingLocation.Text = "Latitude: " + startingPoint.Latitude.ToString() + "  Longitude: " + startingPoint.Longitude.ToString();
-                else
-                    ElapsedDistance.Text = "Couldn't get Starting Point";
+                StartOrientation();
             }
-            else
-            {
-                bMeasuringDistance = false;
-                if (bRotation == false)
-                    DistanceButton.Text = "Start Measuring Distance";
-                else
-                    RotationButton.Text = "Start Measuring Rotations";
-                try
-                {
-                    var request = new GeolocationRequest(GeolocationAccuracy.Best);
-                    endingPoint = await Geolocation.GetLocationAsync(request);
-                }
-                catch (FeatureNotSupportedException)
-                {
-                    FinalLocation.Text = "This feature is not supported on this device!";
-                }
-                catch (FeatureNotEnabledException)
-                {
-                    FinalLocation.Text = "This feature is not enabled on this device!";
-                }
-                catch (PermissionException)
-                {
-                    FinalLocation.Text = "This feature is not permitted on this device!";
-                }
-                catch (Exception)
-                {
-                    FinalLocation.Text = "Exception!";
-                }
-                FinalLocation.Text = "Latitude: " + endingPoint.Latitude.ToString() + "  Longitude: " + endingPoint.Longitude.ToString();
-                double nDistanceCovered = Location.CalculateDistance(startingPoint, endingPoint, DistanceUnits.Kilometers);
-                nDistanceCovered = nDistanceCovered * 1000;
-                ElapsedDistance.Text = String.Format("{0:0.00}", nDistanceCovered) + " meters have been covered!";
-                if ( bRotation == true )
-                {
-                    double nRotations = nDistanceCovered / 10;
-                    ElapsedRotations.Text = String.Format("{0:0.00}", nRotations) + " rotations have occured!";
-                }
-                
-                
-            }
-        }
-
-        private void DistanceButton_Clicked(object sender, EventArgs e)
-        {
-            StartMeasuring(false);
         }
 
         private void RotationButton_Clicked(object sender, EventArgs e)
         {
-            StartMeasuring(true);
+            if (bRotation == false)
+            {
+                bRotation = true;
+                RotationButton.Text = "Stop Measuring Rotations";
+                StartingLocation.Text = "";
+                FinalLocation.Text = "";
+                ElapsedDistance.Text = "";
+                StartOrientation();
+            }
+            else
+            {
+                StopOrientation();
+                RotationButton.Text = "Start Measuring Rotations";
+                bRotation = false;
+            }
         }
 
         void ToEulerAngles(double W, double X, double Y, double Z)
@@ -146,12 +180,14 @@ namespace TireTorture
         {
             var data = e.Reading;
             ToEulerAngles(data.Orientation.W, data.Orientation.X, data.Orientation.Y, data.Orientation.Z);
-            //EulerOutput.Text = eulerAngles[0].ToString("#.##") + "," + eulerAngles[1].ToString("#.##") + "," + eulerAngles[2].ToString("#.##");
+            EulerAngles0.Text = eulerAngles[0].ToString("#.##");
+            EulerAngles1.Text = eulerAngles[1].ToString("#.##");
+            EulerAngles2.Text = eulerAngles[1].ToString("#.##");
         }
 
-        public void OrientationSensorStart(bool bAngledWalk)
+        public void OrientationSensorStart(bool bStartOrientationSensor)
         {// Register for reading changes, be sure to unsubscribe when finished
-            if ( bAngledWalk == true )
+            if ( bStartOrientationSensor == true )
                 OrientationSensor.ReadingChanged += OrientationSensor_ReadingChanged;
             else
                 OrientationSensor.ReadingChanged -= OrientationSensor_ReadingChanged;
@@ -159,7 +195,7 @@ namespace TireTorture
 
         bool CheckOrientation()
         {
-            if (eulerAngles[0] >= -.7 && eulerAngles[0] <= -.25)
+            if (eulerAngles[0] >= .4 && eulerAngles[0] <= .95)
                 return true;
             else
                 return false;
@@ -167,21 +203,13 @@ namespace TireTorture
 
         public async void StartMeasuringAngledWalk(bool bAngledWalk)
         {
-            if (bAngledWalk == true)
+            if (bAngledWalk == true )
             {
                 try
                 {
+                    AngledWalkButton.Text = "Stop Angled Walk";
                     var startRequest = new GeolocationRequest(GeolocationAccuracy.Best);
                     startingPoint = await Geolocation.GetLocationAsync(startRequest);
-                    OrientationSensorStart(bAngledWalk);
-                    OrientationSensor.Start(speed);
-                    while (OrientationSensor.IsMonitoring && CheckOrientation() == true)
-                    {
-                        EulerOutput.Text = eulerAngles[0].ToString("#.##") + "," + eulerAngles[1].ToString("#.##") + "," + eulerAngles[2].ToString("#.##");
-                    }
-                    bAngledWalk = false;
-                    OrientationSensorStart(bAngledWalk);
-                    StartMeasuringAngledWalk(bAngledWalk);
                 }
                 catch (FeatureNotSupportedException fnsEx)
                 {
@@ -200,6 +228,7 @@ namespace TireTorture
             }
             else
             {
+                AngledWalkButton.Text = "Start Angled Walk";
                 var endRequest = new GeolocationRequest(GeolocationAccuracy.Best);
                 endingPoint = await Geolocation.GetLocationAsync(endRequest);
                 double meters = Location.CalculateDistance(startingPoint, endingPoint, DistanceUnits.Kilometers);
@@ -212,9 +241,16 @@ namespace TireTorture
         {
             if ( bAngledWalk == false )
             {
-                bAngledWalk = true;
-                EulerOutput.Text = "";
-                StartMeasuringAngledWalk(bAngledWalk);
+                if (CheckOrientation() == true)
+                {
+                    bAngledWalk = true;
+                    EulerOutput.Text = "";
+                    StartMeasuringAngledWalk(bAngledWalk);
+                }
+                else
+                {
+                    EulerOutput.Text = "The Euler Angle needs to be between .4 and .95";
+                }
             }
             else
             {
