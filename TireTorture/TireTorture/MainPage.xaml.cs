@@ -43,7 +43,7 @@ namespace TireTorture
             }
         }
 
-        private async void StartOrientation()
+        private async void StartMeasuringDistance()
         {
             try
             {
@@ -72,7 +72,7 @@ namespace TireTorture
                 ElapsedDistance.Text = "Couldn't get Starting Point";
         }
 
-        private async void StopOrientation()
+        private async void StopMeasuringDistance()
         {
             try
             {
@@ -106,42 +106,60 @@ namespace TireTorture
             }
         }
 
-        
+
         private void DistanceButton_Clicked(object sender, EventArgs e)
         {
-            if (bMeasuringDistance == true)
+            if (bAngledWalk == false && bRotation == false)
             {
-                StopOrientation();
-                DistanceButton.Text = "Start Measuring Distance";
-                bMeasuringDistance = false;
+                if (bMeasuringDistance == true)
+                {
+                    StopMeasuringDistance();
+                    DistanceButton.Text = "Start Measuring Distance";
+                    bMeasuringDistance = false;
+                }
+                else
+                {
+                    DistanceButton.Text = "Stop Measuring Distance";
+                    bMeasuringDistance = true;
+                    ResetOutputVariables();
+                    StartMeasuringDistance();
+                }
             }
             else
             {
-                DistanceButton.Text = "Stop Measuring Distance";
-                bMeasuringDistance = true;
-                StartingLocation.Text = "";
-                FinalLocation.Text = "";
-                ElapsedDistance.Text = "";
-                StartOrientation();
+                StartingLocation.Text = "You can only run one function at a time!";
             }
+        }
+
+        public void ResetOutputVariables()
+        {
+            StartingLocation.Text = "";
+            FinalLocation.Text = "";
+            ElapsedDistance.Text = "";
+            ElapsedRotations.Text = "";
         }
 
         private void RotationButton_Clicked(object sender, EventArgs e)
         {
-            if (bRotation == false)
+            if (bAngledWalk == false && bMeasuringDistance == false)
             {
-                bRotation = true;
-                RotationButton.Text = "Stop Measuring Rotations";
-                StartingLocation.Text = "";
-                FinalLocation.Text = "";
-                ElapsedDistance.Text = "";
-                StartOrientation();
+                if (bRotation == false)
+                {
+                    bRotation = true;
+                    RotationButton.Text = "Stop Measuring Rotations";
+                    ResetOutputVariables();
+                    StartMeasuringDistance();
+                }
+                else
+                {
+                    StopMeasuringDistance();
+                    RotationButton.Text = "Start Measuring Rotations";
+                    bRotation = false;
+                }
             }
             else
             {
-                StopOrientation();
-                RotationButton.Text = "Start Measuring Rotations";
-                bRotation = false;
+                StartingLocation.Text = "You can only run one function at a time!";
             }
         }
 
@@ -183,11 +201,17 @@ namespace TireTorture
             EulerAngles0.Text = eulerAngles[0].ToString("#.##");
             EulerAngles1.Text = eulerAngles[1].ToString("#.##");
             EulerAngles2.Text = eulerAngles[1].ToString("#.##");
+            if (bAngledWalk == true && CheckOrientation() == false)
+            {
+                EulerAngles2.Text = "Whoops...";
+                bAngledWalk = false;
+                StartMeasuringAngledWalk(bAngledWalk);
+            }
         }
 
         public void OrientationSensorStart(bool bStartOrientationSensor)
         {// Register for reading changes, be sure to unsubscribe when finished
-            if ( bStartOrientationSensor == true )
+            if (bStartOrientationSensor == true)
                 OrientationSensor.ReadingChanged += OrientationSensor_ReadingChanged;
             else
                 OrientationSensor.ReadingChanged -= OrientationSensor_ReadingChanged;
@@ -201,61 +225,47 @@ namespace TireTorture
                 return false;
         }
 
-        public async void StartMeasuringAngledWalk(bool bAngledWalk)
+        public void StartMeasuringAngledWalk(bool bAngledWalk)
         {
-            if (bAngledWalk == true )
+            if (bAngledWalk == true)
             {
-                try
-                {
-                    AngledWalkButton.Text = "Stop Angled Walk";
-                    var startRequest = new GeolocationRequest(GeolocationAccuracy.Best);
-                    startingPoint = await Geolocation.GetLocationAsync(startRequest);
-                }
-                catch (FeatureNotSupportedException fnsEx)
-                {
-                    if (fnsEx != null)
-                        EulerOutput.Text = fnsEx.Message;
-                    else
-                        EulerOutput.Text = "This feature is not supported by your device!";
-                }
-                catch (Exception ex)
-                {
-                    if (ex != null)
-                        EulerOutput.Text = ex.Message;
-                    else
-                        EulerOutput.Text = "Unknown Exception";
-                }
+                AngledWalkButton.Text = "Stop Angled Walk";
+                ResetOutputVariables();
+                StartMeasuringDistance();
             }
             else
             {
                 AngledWalkButton.Text = "Start Angled Walk";
-                var endRequest = new GeolocationRequest(GeolocationAccuracy.Best);
-                endingPoint = await Geolocation.GetLocationAsync(endRequest);
-                double meters = Location.CalculateDistance(startingPoint, endingPoint, DistanceUnits.Kilometers);
-                meters = meters * 1000;
-                ElapsedDistance.Text = String.Format("{0:0.00}", meters) + " meters have been covered!";
+                StopMeasuringDistance();
             }
         }
-    
+
         public void AngledWalkButton_Clicked(object sender, EventArgs e)
         {
-            if ( bAngledWalk == false )
+            if (bRotation == false && bMeasuringDistance == false)
             {
-                if (CheckOrientation() == true)
+                if (bAngledWalk == false)
                 {
-                    bAngledWalk = true;
-                    EulerOutput.Text = "";
-                    StartMeasuringAngledWalk(bAngledWalk);
+                    if (CheckOrientation() == true)
+                    {
+                        bAngledWalk = true;
+                        EulerOutput.Text = "";
+                        StartMeasuringAngledWalk(bAngledWalk);
+                    }
+                    else
+                    {
+                        EulerOutput.Text = "The Euler Angle needs to be between .4 and .95";
+                    }
                 }
                 else
                 {
-                    EulerOutput.Text = "The Euler Angle needs to be between .4 and .95";
+                    bAngledWalk = false;
+                    StartMeasuringAngledWalk(bAngledWalk);
                 }
             }
             else
             {
-                bAngledWalk = false;
-                StartMeasuringAngledWalk(bAngledWalk);
+                StartingLocation.Text = "You can only run one function at a time!";
             }
         }
     }
